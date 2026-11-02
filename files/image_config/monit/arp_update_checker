@@ -39,16 +39,16 @@ def is_process_running(process_name):
         return False
 
 def is_arp_update_stuck(timeout=TIMEOUT):
-    """Check if arp_update is stuck by looking for a ping command running longer than the specified timeout. (Default 1sec)"""
+    """Check if arp_update is stuck by looking for a ping command running longer than the specified timeout. (Default 5sec)"""
     try:
         arp_update_pid = subprocess.check_output(["pgrep", "-x", "arp_update"]).strip().decode('utf-8')
         child_pids = subprocess.check_output(["pgrep", "-P", arp_update_pid]).strip().decode('utf-8').split()
         for pid in child_pids:
-            (cmd, elapsed_time)=subprocess.check_output(["ps", "-p", "1550527", "-o", "comm=,etimes="]).strip().decode('utf-8').split()
+            (cmd, elapsed_time)=subprocess.check_output(["ps", "-p", pid, "-o", "comm=,etimes="]).strip().decode('utf-8').split()
 
-            if "ping" in cmd:
+            if "ping" in cmd or "ndisc" in cmd:
                 # Check if the elapsed time is greater than the timeout
-                if elapsed_time > timeout:
+                if float(elapsed_time) > timeout:
                     return True
         return False
     except subprocess.CalledProcessError:
